@@ -1,7 +1,3 @@
-# Valcann Zabbix Templates
-
-Este repositório contém os templates Zabbix customizados pela **Valcann**, utilizados para monitoramento de servidores Windows.
-
 ## Zabbix Template Windows Valcann PRD - Github
 
 A pasta **`Zabbix Template Windows Valcann PRD - Github`** contém **9 templates**, que são associados ao template principal **`Windows Zabbix agent By Valcann.yaml`**.

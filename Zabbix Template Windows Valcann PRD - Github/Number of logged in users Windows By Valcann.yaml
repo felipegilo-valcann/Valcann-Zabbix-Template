@@ -1,0 +1,35 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 87aee4cb0e1343ccba619ab094961b8d
+      name: Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+    - uuid: 5eaaad360f814208b4123886b87455e2
+      name: Valcann
+    - uuid: e6038d56379f469a8610699f874881f7
+      name: Windows
+  templates:
+    - uuid: 787ea7988f00499b90a33ef201dc4217
+      template: 'Number of logged in users Windows By Valcann'
+      name: 'Number of logged in users Windows By Valcann'
+      description: 'By Valcann'
+      groups:
+        - name: Production
+        - name: Template/Valcann
+        - name: Valcann
+        - name: Windows
+      items:
+        - uuid: f3ca6fff1acc45e0b5a816be31f894df
+          name: 'Number of logged in users'
+          key: 'perf_counter["\Terminal Services\Active Sessions"]'
+          history: 90d
+      tags:
+        - tag: component
+          value: users
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: production

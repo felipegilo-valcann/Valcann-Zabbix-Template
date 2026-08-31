@@ -1,6 +1,6 @@
-## Zabbix Template Windows Valcann PRD - Github
+## Zabbix Template Windows Valcann PRD
 
-A pasta **`Zabbix Template Windows Valcann PRD - Github`** contém **9 templates**, que são associados ao template principal **`Windows Zabbix agent By Valcann.yaml`**.
+O Repositório **`Zabbix Template Windows Valcann PRD - Github`** contém **9 templates**, que são associados ao template principal **`Windows Zabbix agent By Valcann.yaml`**.
 
 ### Templates disponíveis
 

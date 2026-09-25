@@ -1,0 +1,50 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 87aee4cb0e1343ccba619ab094961b8d
+      name: Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+    - uuid: 5eaaad360f814208b4123886b87455e2
+      name: Valcann
+    - uuid: e6038d56379f469a8610699f874881f7
+      name: Windows
+  templates:
+    - uuid: 45fe06d03d2e47d2a455fc380a1d615c
+      template: 'Windows - Monitoring By Valcann'
+      name: 'Windows - Monitoring By Valcann'
+      templates:
+        - name: 'Windows - Antivirus By Valcann'
+        - name: 'Windows - CPU Zabbix agent By Valcann'
+        - name: 'Windows - Filesystems Zabbix agent By Valcann'
+        - name: 'Windows - Generic Zabbix agent By Valcann'
+        - name: 'Windows - Memory Zabbix agent By Valcann'
+        - name: 'Windows - Metadata By Valcann'
+        - name: 'Windows - Network by Zabbix agent By Valcann'
+        - name: 'Windows - Number of logged in users By Valcann'
+        - name: 'Windows - Zabbix agent By Valcann'
+      groups:
+        - name: Production
+        - name: Template/Valcann
+        - name: Valcann
+        - name: Windows
+      tags:
+        - tag: component
+          value: agent
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: production
+      macros:
+        - macro: '{$AMBIENTE}'
+          value: PRD
+          description: 'Esse valor deve ser alterado conforme o tipo do ambiente Exemplo: PRD e HOM'
+  triggers:
+    - uuid: f48dd26dcd564361aac79d72df1c4f0e
+      expression: 'max(/Windows - Monitoring By Valcann/agent.ping,5m)=0'
+      name: '[P1] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISPONIBILIDADE'
+      priority: HIGH

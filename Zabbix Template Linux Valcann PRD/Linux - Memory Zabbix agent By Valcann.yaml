@@ -1,0 +1,243 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 26ff66d075fa458191ad23b75aa88729
+      name: Linux
+    - uuid: 87aee4cb0e1343ccba619ab094961b8d
+      name: Production
+    - uuid: 05c84a0a453f4b44949ad9e9a614b173
+      name: Template/Valcann
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+    - uuid: fb0d0b63aabe4c4a83fb19a92cb34474
+      name: Valcann
+  templates:
+    - uuid: b1b23541ce4a4238b0104c9a4041c39c
+      template: 'Linux - Memory Zabbix agent By Valcann'
+      name: 'Linux - Memory Zabbix agent By Valcann'
+      description: |
+        Template tooling version used: 0.38
+        
+        By Valcann
+      groups:
+        - name: Linux
+        - name: Production
+        - name: Template/Valcann
+        - name: Templates/Modules
+        - name: Valcann
+      items:
+        - uuid: bcb622f8146e471b9c926bd9f8f47895
+          name: 'Free swap space'
+          key: 'system.swap.size[,free]'
+          history: 7d
+          units: B
+          description: 'The free space of swap volume/file in bytes.'
+          tags:
+            - tag: Application
+              value: Memory
+        - uuid: 64c130076fa9473c9f342b6041227a72
+          name: 'Free swap space in %'
+          key: 'system.swap.size[,pfree]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The free space of swap volume/file in percent.'
+          tags:
+            - tag: Application
+              value: Memory
+        - uuid: 9d2b058b50b74c0e8a169e22c1a8b857
+          name: 'Total swap space'
+          key: 'system.swap.size[,total]'
+          history: 7d
+          units: B
+          description: 'The total space of swap volume/file in bytes.'
+          tags:
+            - tag: Application
+              value: Memory
+        - uuid: c3ef346478204446ad85b859b1544bfe
+          name: 'Available memory'
+          key: 'vm.memory.size[available]'
+          history: 7d
+          units: B
+          description: 'Available memory, in Linux, available = free + buffers + cache. On other platforms calculation may vary. See also: https://www.zabbix.com/documentation/current/manual/appendix/items/vm.memory.size_params'
+          tags:
+            - tag: Application
+              value: Memory
+        - uuid: 68deebaba27042a089dbfd65f78e97da
+          name: 'Available memory in %'
+          key: 'vm.memory.size[pavailable]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'Available memory as percentage of total. See also: https://www.zabbix.com/documentation/current/manual/appendix/items/vm.memory.size_params'
+          tags:
+            - tag: Application
+              value: Memory
+        - uuid: b6887bdb054b477581e8bce99405faa8
+          name: 'Total memory'
+          key: 'vm.memory.size[total]'
+          history: 7d
+          units: B
+          description: 'Total memory in Bytes'
+          tags:
+            - tag: Application
+              value: Memory
+        - uuid: 44488bdaf64b4acea007f318d73b1151
+          name: 'Memory utilization'
+          type: DEPENDENT
+          key: vm.memory.utilization
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'Memory used percentage is calculated as (100-pavailable)'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - 'return (100-value);'
+          master_item:
+            key: 'vm.memory.size[pavailable]'
+          tags:
+            - tag: Application
+              value: Memory
+          triggers:
+            - uuid: 73530b2c979541208dec7ee27b750ff5
+              expression: 'min(/Linux - Memory Zabbix agent By Valcann/vm.memory.utilization,15m)>={$MEMORY.UTIL.CRIT.P1}'
+              name: '[P1] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | MEMORY UTILIZATION ( >{$MEMORY.UTIL.CRIT.P1}% for 15m)'
+              status: DISABLED
+              priority: HIGH
+              description: 'The system is running out of free memory.'
+              tags:
+                - tag: Indicators
+                  value: Performance
+                - tag: Name
+                  value: '{HOST.NAME}'
+            - uuid: 3f33bc087973420cb03fad2ceb6197d8
+              expression: |
+                min(/Linux - Memory Zabbix agent By Valcann/vm.memory.utilization,15m)>={$MEMORY.UTIL.CRIT.P2}
+                and
+                min(/Linux - Memory Zabbix agent By Valcann/vm.memory.utilization,15m)<{$MEMORY.UTIL.CRIT.P1}
+              name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} |  {$AMBIENTE} | MEMORY UTILIZATION ( >{$MEMORY.UTIL.MAX.P2}% for 15m)'
+              priority: AVERAGE
+            - uuid: f5fe7638e8f1472ca1cfe4cd764032ca
+              expression: |
+                min(/Linux - Memory Zabbix agent By Valcann/vm.memory.utilization,15m)>={$MEMORY.UTIL.CRIT.P3}
+                and
+                min(/Linux - Memory Zabbix agent By Valcann/vm.memory.utilization,15m)<{$MEMORY.UTIL.CRIT.P2}
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} |  {$AMBIENTE} | MEMORY UTILIZATION ( >{$MEMORY.UTIL.MAX.P3}% for 15m)'
+              priority: WARNING
+      tags:
+        - tag: component
+          value: memory
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: linux
+        - tag: tier
+          value: production
+      macros:
+        - macro: '{$MEMORY.AVAILABLE.MIN}'
+          value: 20M
+          description: 'This macro is used as a threshold in memory available trigger.'
+        - macro: '{$MEMORY.UTIL.MAX}'
+          value: '90'
+          description: 'This macro is used as a threshold in memory utilization trigger.'
+        - macro: '{$MEMORY.UTIL.CRIT.P1}'
+          value: '99'
+        - macro: '{$MEMORY.UTIL.CRIT.P2}'
+          value: '95'
+        - macro: '{$MEMORY.UTIL.CRIT.P3}'
+          value: '90'
+        - macro: '{$SWAP.PFREE.MIN.WARN}'
+          value: '50'
+      dashboards:
+        - uuid: 36153842c1344d7395107dd5c0e0798c
+          name: Memory
+          pages:
+            - name: Overview
+              widgets:
+                - type: graph
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - Memory Zabbix agent By Valcann'
+                        name: 'Memory usage'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                - type: graph
+                  'y': '5'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - Memory Zabbix agent By Valcann'
+                        name: 'Memory utilization'
+                    - type: STRING
+                      name: reference
+                      value: AAAAB
+                - type: graph
+                  'y': '10'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - Memory Zabbix agent By Valcann'
+                        name: 'Swap usage'
+                    - type: STRING
+                      name: reference
+                      value: AAAAC
+  triggers:
+    - uuid: 9c99081322bb4b9ca3ddec9b0199358a
+      expression: 'min(/Linux - Memory Zabbix agent By Valcann/system.swap.size[,pfree],5m)<{$SWAP.PFREE.MIN.WARN} and last(/Linux - Memory Zabbix agent By Valcann/system.swap.size[,total])>0'
+      name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | HIGH SWAP SPACE USAGE ( less than {$SWAP.PFREE.MIN.WARN}% free)'
+      opdata: 'Free: {ITEM.LASTVALUE1}, total: {ITEM.LASTVALUE2}'
+      status: DISABLED
+      priority: WARNING
+      description: 'This trigger is ignored, if there is no swap configured'
+  graphs:
+    - uuid: 8ca5c36fd3d64a299192c1a50339a3a8
+      name: 'Memory usage'
+      ymin_type_1: FIXED
+      graph_items:
+        - drawtype: BOLD_LINE
+          color: 1A7C11
+          item:
+            host: 'Linux - Memory Zabbix agent By Valcann'
+            key: 'vm.memory.size[total]'
+        - sortorder: '1'
+          drawtype: GRADIENT_LINE
+          color: 2774A4
+          item:
+            host: 'Linux - Memory Zabbix agent By Valcann'
+            key: 'vm.memory.size[available]'
+    - uuid: 6c2b2ff1558d44ebb8375292f5890a25
+      name: 'Memory utilization'
+      ymin_type_1: FIXED
+      ymax_type_1: FIXED
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: 1A7C11
+          item:
+            host: 'Linux - Memory Zabbix agent By Valcann'
+            key: vm.memory.utilization
+    - uuid: 1d314c6a7ef341249167a19454e47340
+      name: 'Swap usage'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Linux - Memory Zabbix agent By Valcann'
+            key: 'system.swap.size[,free]'
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Linux - Memory Zabbix agent By Valcann'
+            key: 'system.swap.size[,total]'

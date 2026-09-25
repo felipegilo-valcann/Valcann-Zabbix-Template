@@ -1,0 +1,45 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+    - uuid: 5eaaad360f814208b4123886b87455e2
+      name: Valcann
+    - uuid: e6038d56379f469a8610699f874881f7
+      name: Windows
+  templates:
+    - uuid: 32c1601ff7e549a0b2a464eef697a2e9
+      template: 'Windows - Monitoring By Valcann - Non-Production'
+      name: 'Windows - Monitoring By Valcann - Non-Production'
+      templates:
+        - name: 'Windows - Antivirus By Valcann Non-Production'
+        - name: 'Windows - CPU Zabbix agent By Valcann Non-Production'
+        - name: 'Windows - Filesystems Zabbix agent By Valcann Non-Production'
+        - name: 'Windows - Generic Zabbix agent By Valcann Non-Production'
+        - name: 'Windows - Memory Zabbix agent By Valcann Non-Production'
+        - name: 'Windows - Metadata By Valcann Non-Production'
+        - name: 'Windows - Network by Zabbix agent By Valcann Non-Production'
+        - name: 'Windows - Number of logged in users By Valcann Non-Production'
+        - name: 'Windows - Zabbix agent By Valcann Non-Production'
+      groups:
+        - name: Non-Production
+        - name: Template/Valcann
+        - name: Valcann
+        - name: Windows
+      tags:
+        - tag: component
+          value: agent
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: non-production
+      macros:
+        - macro: '{$AMBIENTE}'
+          value: NON-PRD
+          description: 'Esse valor deve ser alterado conforme o tipo do ambiente Exemplo: PRD e HOM'

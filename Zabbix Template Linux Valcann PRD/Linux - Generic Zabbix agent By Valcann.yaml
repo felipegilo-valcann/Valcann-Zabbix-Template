@@ -1,0 +1,296 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 26ff66d075fa458191ad23b75aa88729
+      name: Linux
+    - uuid: 87aee4cb0e1343ccba619ab094961b8d
+      name: Production
+    - uuid: 05c84a0a453f4b44949ad9e9a614b173
+      name: Template/Valcann
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+    - uuid: fb0d0b63aabe4c4a83fb19a92cb34474
+      name: Valcann
+  templates:
+    - uuid: 6e97dbbb0429431281823afe6d0126a4
+      template: 'Linux - Generic Zabbix agent By Valcann'
+      name: 'Linux - Generic Zabbix agent By Valcann'
+      description: 'Template tooling version used: 0.38'
+      groups:
+        - name: Linux
+        - name: Production
+        - name: Template/Valcann
+        - name: Templates/Modules
+        - name: Valcann
+      items:
+        - uuid: 6ffa4e842bde4d73b2d5af8e26c263b8
+          name: 'Maximum number of open file descriptors'
+          key: kernel.maxfiles
+          delay: 1h
+          history: 7d
+          description: 'It could be increased by using sysctrl utility or modifying file /etc/sysctl.conf.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 61fe059d467349179cfa999d11ba5fe3
+              expression: 'last(/Linux - Generic Zabbix agent By Valcann/kernel.maxfiles)<{$KERNEL.MAXFILES.MIN}'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Configured max number of open filedescriptors is too low (< {$KERNEL.MAXFILES.MIN})'
+              status: DISABLED
+              priority: INFO
+        - uuid: 4f5866eba3254c4eb25d0373baa97155
+          name: 'Maximum number of processes'
+          key: kernel.maxproc
+          delay: 1h
+          history: 7d
+          description: 'It could be increased by using sysctrl utility or modifying file /etc/sysctl.conf.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 1d1d1951cc194ba783a394196e2c2330
+              expression: 'last(/Linux - Generic Zabbix agent By Valcann/kernel.maxproc)<{$KERNEL.MAXPROC.MIN}'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Configured max number of processes is too low (< {$KERNEL.MAXPROC.MIN})'
+              status: DISABLED
+              priority: INFO
+              dependencies:
+                - name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Getting closer to process limit (over 80% used)'
+                  expression: 'last(/Linux - Generic Zabbix agent By Valcann/proc.num)/last(/Linux - Generic Zabbix agent By Valcann/kernel.maxproc)*100>80'
+        - uuid: a324b68aa24f4576bda64ea5ee1f3e3f
+          name: 'Number of processes'
+          key: proc.num
+          history: 7d
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 9bfcb70631074358ab288daade16ea8a
+          name: 'Number of running processes'
+          key: 'proc.num[,,run]'
+          history: 7d
+          tags:
+            - tag: Application
+              value: General
+        - uuid: c6100ed6cc884d7abd78c27f8e981ac8
+          name: 'System boot time'
+          key: system.boottime
+          delay: 15m
+          history: 7d
+          units: unixtime
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 810d212b65af44588fb30d6e6a776fdd
+          name: 'System name'
+          key: system.hostname
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          description: 'System host name.'
+          inventory_link: NAME
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 3fa377c165b945279b532cbf91e40907
+              expression: '(last(/Linux - Generic Zabbix agent By Valcann/system.hostname,#1)<>last(/Linux - Generic Zabbix agent By Valcann/system.hostname,#2))=1 and length(last(/Linux - Generic Zabbix agent By Valcann/system.hostname))>0'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | System name has changed (new name: {ITEM.VALUE})'
+              priority: INFO
+              description: 'System name has changed. Ack to close.'
+              manual_close: 'YES'
+        - uuid: 031ca895b16540cea21d68dd77f34273
+          name: 'System local time'
+          key: system.localtime
+          history: 7d
+          units: unixtime
+          description: 'System local time of the host.'
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 30cc6a0cbb1045039e5918adbd454f38
+              expression: 'fuzzytime(/Linux - Generic Zabbix agent By Valcann/system.localtime,{$SYSTEM.FUZZYTIME.MAX})=0'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | System time is out of sync (diff with Zabbix server > {$SYSTEM.FUZZYTIME.MAX}s)'
+              status: DISABLED
+              priority: WARNING
+              description: 'The host system time is different from the Zabbix server time.'
+              manual_close: 'YES'
+        - uuid: 1bee14e4be0f41b58f7eb0b36df2cc8e
+          name: 'Operating system architecture'
+          key: system.sw.arch
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          description: 'Operating system architecture of the host.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 2047e8ebf5284c8882c8eb6c4c759e54
+          name: 'Operating system'
+          key: system.sw.os
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          inventory_link: OS
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+          triggers:
+            - uuid: 6ff36c9d10db4ee7a2a4a19f809d9cb0
+              expression: '(last(/Linux - Generic Zabbix agent By Valcann/system.sw.os,#1)<>last(/Linux - Generic Zabbix agent By Valcann/system.sw.os,#2))=1 and length(last(/Linux - Generic Zabbix agent By Valcann/system.sw.os))>0'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Operating system description has changed'
+              priority: INFO
+              description: 'Operating system description has changed. Possible reasons that system has been updated or replaced. Ack to close.'
+              manual_close: 'YES'
+              dependencies:
+                - name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | System name has changed (new name: {ITEM.VALUE})'
+                  expression: '(last(/Linux - Generic Zabbix agent By Valcann/system.hostname,#1)<>last(/Linux - Generic Zabbix agent By Valcann/system.hostname,#2))=1 and length(last(/Linux - Generic Zabbix agent By Valcann/system.hostname))>0'
+        - uuid: c916ac69bd784c07af223cef69053d83
+          name: 'Software installed'
+          key: system.sw.packages
+          delay: 1h
+          history: 2w
+          value_type: TEXT
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 10514ff946aa4321bed691b1f5d6af71
+          name: 'System description'
+          key: system.uname
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          description: 'The information as normally returned by ''uname -a''.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 1fb1585f971c4103b0210225e592d7e6
+          name: 'System uptime'
+          key: system.uptime
+          delay: 30s
+          history: 2w
+          trends: 0d
+          units: uptime
+          description: 'System uptime in ''N days, hh:mm:ss'' format.'
+          tags:
+            - tag: Application
+              value: Status
+          triggers:
+            - uuid: d22ce692a7fa4c0f9603fc38a16d5f26
+              expression: 'last(/Linux - Generic Zabbix agent By Valcann/system.uptime)<10m'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | has been restarted (uptime < 10m)'
+              priority: WARNING
+              description: 'The host uptime is less than 10 minutes'
+              manual_close: 'YES'
+              tags:
+                - tag: Indicators
+                  value: Operational
+        - uuid: 0043a51c17834668acfc74dcb272724e
+          name: 'Number of logged in users'
+          key: system.users.num
+          history: 7d
+          description: 'Number of users who are currently logged in.'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 1a529024a7e8483882761269cf05a2c8
+          name: 'Checksum of /etc/passwd'
+          key: 'vfs.file.cksum[/etc/passwd]'
+          delay: 15m
+          history: 7d
+          value_type: CHAR
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          tags:
+            - tag: Application
+              value: Security
+          triggers:
+            - uuid: 6c4e3d63e4964f789dc07af019a76ad7
+              expression: '(last(/Linux - Generic Zabbix agent By Valcann/vfs.file.cksum[/etc/passwd],#1)<>last(/Linux - Generic Zabbix agent By Valcann/vfs.file.cksum[/etc/passwd],#2))>0'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | /etc/passwd has been changed'
+              priority: INFO
+              manual_close: 'YES'
+              dependencies:
+                - name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Operating system description has changed'
+                  expression: '(last(/Linux - Generic Zabbix agent By Valcann/system.sw.os,#1)<>last(/Linux - Generic Zabbix agent By Valcann/system.sw.os,#2))=1 and length(last(/Linux - Generic Zabbix agent By Valcann/system.sw.os))>0'
+                - name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | System name has changed (new name: {ITEM.VALUE})'
+                  expression: '(last(/Linux - Generic Zabbix agent By Valcann/system.hostname,#1)<>last(/Linux - Generic Zabbix agent By Valcann/system.hostname,#2))=1 and length(last(/Linux - Generic Zabbix agent By Valcann/system.hostname))>0'
+              tags:
+                - tag: Indicators
+                  value: Operational
+                - tag: Name
+                  value: '{HOST.NAME}'
+      tags:
+        - tag: component
+          value: generic
+        - tag: custom
+          value: valcann
+        - tag: os
+          value: linux
+        - tag: tier
+          value: production
+      macros:
+        - macro: '{$KERNEL.MAXFILES.MIN}'
+          value: '256'
+        - macro: '{$KERNEL.MAXPROC.MIN}'
+          value: '1024'
+        - macro: '{$SYSTEM.FUZZYTIME.MAX}'
+          value: '60'
+  triggers:
+    - uuid: bd3878b8963446ba9598f19dbd2c4793
+      expression: 'last(/Linux - Generic Zabbix agent By Valcann/proc.num)/last(/Linux - Generic Zabbix agent By Valcann/kernel.maxproc)*100>80'
+      name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Getting closer to process limit (over 80% used)'
+      opdata: '{ITEM.LASTVALUE1} active, {ITEM.LASTVALUE2} limit.'
+      status: DISABLED
+      priority: WARNING
+  graphs:
+    - uuid: dade70f189b64cdfb88bb3e61bcf96f4
+      name: Processes
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Linux - Generic Zabbix agent By Valcann'
+            key: proc.num
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Linux - Generic Zabbix agent By Valcann'
+            key: 'proc.num[,,run]'
+        - sortorder: '2'
+          color: F63100
+          item:
+            host: 'Linux - Generic Zabbix agent By Valcann'
+            key: kernel.maxproc

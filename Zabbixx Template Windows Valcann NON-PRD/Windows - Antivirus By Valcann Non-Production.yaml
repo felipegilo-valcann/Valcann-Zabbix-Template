@@ -1,0 +1,55 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+    - uuid: 5eaaad360f814208b4123886b87455e2
+      name: Valcann
+    - uuid: e6038d56379f469a8610699f874881f7
+      name: Windows
+  templates:
+    - uuid: 5e394a09a2e54dbb87914607253385ca
+      template: 'Windows - Antivirus By Valcann Non-Production'
+      name: 'Windows - Antivirus By Valcann Non-Production'
+      groups:
+        - name: Non-Production
+        - name: Template/Valcann
+        - name: Valcann
+        - name: Windows
+      tags:
+        - tag: component
+          value: antivirus
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: Name
+          value: '{HOST.NAME}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: non-production
+      valuemaps:
+        - uuid: c2a72839a9ae4822b1d2286b5e1a0b50
+          name: 'Windows service state'
+          mappings:
+            - value: '0'
+              newvalue: Running
+            - value: '1'
+              newvalue: Paused
+            - value: '2'
+              newvalue: 'Start pending'
+            - value: '3'
+              newvalue: 'Pause pending'
+            - value: '4'
+              newvalue: 'Continue pending'
+            - value: '5'
+              newvalue: 'Stop pending'
+            - value: '6'
+              newvalue: Stopped
+            - value: '7'
+              newvalue: Unknown
+            - value: '255'
+              newvalue: 'No such service'

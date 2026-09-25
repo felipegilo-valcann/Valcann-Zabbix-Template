@@ -1,0 +1,214 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+    - uuid: 5eaaad360f814208b4123886b87455e2
+      name: Valcann
+    - uuid: e6038d56379f469a8610699f874881f7
+      name: Windows
+  templates:
+    - uuid: 517bf26e7f4142c1bd6a6172b18fe387
+      template: 'Windows - Filesystems Zabbix agent By Valcann Non-Production'
+      name: 'Windows - Filesystems Zabbix agent By Valcann Non-Production'
+      description: |
+        Template tooling version used: 0.38
+        
+        By Valcann
+      groups:
+        - name: Non-Production
+        - name: Template/Valcann
+        - name: Templates/Modules
+        - name: Valcann
+        - name: Windows
+      discovery_rules:
+        - uuid: 92ffb0acfb9a4ccda81cf29bb6e23942
+          name: 'Mounted filesystem discovery'
+          key: vfs.fs.discovery
+          delay: 1h
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#FSDRIVETYPE}'
+                value: '{$VFS.FS.FSDRIVETYPE.MATCHES}'
+              - macro: '{#FSDRIVETYPE}'
+                value: '{$VFS.FS.FSDRIVETYPE.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+              - macro: '{#FSNAME}'
+                value: '{$VFS.FS.FSNAME.MATCHES}'
+              - macro: '{#FSNAME}'
+                value: '{$VFS.FS.FSNAME.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+              - macro: '{#FSTYPE}'
+                value: '{$VFS.FS.FSTYPE.MATCHES}'
+              - macro: '{#FSTYPE}'
+                value: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovery of file systems of different types.'
+          item_prototypes:
+            - uuid: d4c42090c3904b89a7873ac9b1bb60ae
+              name: '{#FSNAME}: Space utilization'
+              key: 'vfs.fs.size[{#FSNAME},pused]'
+              history: 7d
+              value_type: FLOAT
+              units: '%'
+              description: 'Space utilization in % for {#FSNAME}'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+              trigger_prototypes:
+                - uuid: 640f3528173a4cec96f3654c57ddb2b6
+                  expression: 'last(/Windows - Filesystems Zabbix agent By Valcann Non-Production/vfs.fs.size[{#FSNAME},pused])>={$FS.PUSED.CRIT.P1}'
+                  name: '[P1]{$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISK {#FSNAME} USED 99%)'
+                  opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+                  priority: HIGH
+                  description: 'Disk space usage on {#FSNAME} has reached 99% or above. Only 1% of free space remaining.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: customer
+                      value: '{$CLIENT}'
+                    - tag: Indicators
+                      value: Operational
+                - uuid: 08e758e62b0d440f8fbaeb0075e00928
+                  expression: |
+                    last(/Windows - Filesystems Zabbix agent By Valcann Non-Production/vfs.fs.size[{#FSNAME},pused])>={$FS.PUSED.CRIT.P2}
+                    and
+                    last(/Windows - Filesystems Zabbix agent By Valcann Non-Production/vfs.fs.size[{#FSNAME},pused])<{$FS.PUSED.CRIT.P1}
+                  name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISK {#FSNAME} USED 95%)'
+                  opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+                  priority: AVERAGE
+                  description: 'Disk space usage on {#FSNAME} has reached 95% or above. Only 5% of free space remaining.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: customer
+                      value: '{$CLIENT}'
+                    - tag: Indicators
+                      value: Operational
+                - uuid: 8d6ecc2430e94fc4959c32216dfa22a4
+                  expression: |
+                    last(/Windows - Filesystems Zabbix agent By Valcann Non-Production/vfs.fs.size[{#FSNAME},pused])>={$FS.PUSED.CRIT.P3}
+                    and
+                    last(/Windows - Filesystems Zabbix agent By Valcann Non-Production/vfs.fs.size[{#FSNAME},pused])<{$FS.PUSED.CRIT.P2}
+                  name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISK {#FSNAME} USED 90%)'
+                  opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+                  priority: WARNING
+                  description: 'Disk space usage on {#FSNAME} has reached 90% or above. Only 10% of free space remaining.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: customer
+                      value: '{$CLIENT}'
+                    - tag: Indicators
+                      value: Operational
+            - uuid: 84832f41665c42bc8c912b90bee7e5ee
+              name: '{#FSNAME}: Total space'
+              key: 'vfs.fs.size[{#FSNAME},total]'
+              history: 7d
+              units: B
+              description: 'Total space in Bytes'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+            - uuid: 58de65525a634e959fda56901721c80d
+              name: '{#FSNAME}: Used space'
+              key: 'vfs.fs.size[{#FSNAME},used]'
+              history: 7d
+              units: B
+              description: 'Used storage in Bytes'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+          graph_prototypes:
+            - uuid: 1fd5518dcfc140a88122c9ab4c348603
+              name: '{#FSNAME}: Disk space usage'
+              width: '600'
+              height: '340'
+              type: PIE
+              show_3d: 'YES'
+              graph_items:
+                - color: '969696'
+                  calc_fnc: LAST
+                  type: GRAPH_SUM
+                  item:
+                    host: 'Windows - Filesystems Zabbix agent By Valcann Non-Production'
+                    key: 'vfs.fs.size[{#FSNAME},total]'
+                - sortorder: '1'
+                  color: C80000
+                  calc_fnc: LAST
+                  item:
+                    host: 'Windows - Filesystems Zabbix agent By Valcann Non-Production'
+                    key: 'vfs.fs.size[{#FSNAME},used]'
+      tags:
+        - tag: component
+          value: filesystem
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: non-production
+      macros:
+        - macro: '{$FS.PUSED.CRIT.P1}'
+          value: '99'
+          description: 'Disco ≥ 99%'
+        - macro: '{$FS.PUSED.CRIT.P2}'
+          value: '95'
+          description: 'Disco ≥ 95%'
+        - macro: '{$FS.PUSED.CRIT.P3}'
+          value: '90'
+          description: 'Disco ≥ 90%'
+        - macro: '{$VFS.FS.FSDRIVETYPE.MATCHES}'
+          value: fixed
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        - macro: '{$VFS.FS.FSDRIVETYPE.NOT_MATCHES}'
+          value: ^\s$
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        - macro: '{$VFS.FS.FSNAME.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        - macro: '{$VFS.FS.FSNAME.NOT_MATCHES}'
+          value: ^(/dev|/sys|/run|/proc|.+/shm$)
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        - macro: '{$VFS.FS.FSTYPE.MATCHES}'
+          value: '.*'
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        - macro: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
+          value: ^\s$
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level.'
+        - macro: '{$VFS.FS.PUSED.MAX.CRIT}'
+          value: '90'
+          description: 'The critical threshold of the filesystem utilization in percent.'
+        - macro: '{$VFS.FS.PUSED.MAX.WARN}'
+          value: '80'
+          description: 'The warning threshold of the filesystem utilization in percent.'
+      dashboards:
+        - uuid: f9d5ce97552e4c7388e3766d1d67fa76
+          name: Filesystems
+          pages:
+            - name: Overview
+              widgets:
+                - type: graphprototype
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Windows - Filesystems Zabbix agent By Valcann Non-Production'
+                        name: '{#FSNAME}: Disk space usage'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                    - type: INTEGER
+                      name: rows
+                      value: '1'

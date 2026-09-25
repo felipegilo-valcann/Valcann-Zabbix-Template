@@ -1,0 +1,54 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 05c84a0a453f4b44949ad9e9a614b173
+      name: Template/Valcann
+    - uuid: fb0d0b63aabe4c4a83fb19a92cb34474
+      name: Valcann
+  templates:
+    - uuid: 7b744410ded84c31be4723d779b7fb9a
+      template: 'Linux - Metadata by Valcann Non-Production'
+      name: 'Linux - Metadata by Valcann Non-Production'
+      groups:
+        - name: Non-Production
+        - name: Template/Valcann
+        - name: Valcann
+      items:
+        - uuid: 139ffc94d86140dab7b0d62f854de1b0
+          name: account-id
+          key: ec2.account.id
+          delay: 24h
+          history: 90d
+          value_type: TEXT
+          inventory_link: LOCATION
+        - uuid: 7fdb97f49b6e4fa693fef2b73b6c60a5
+          name: ec2-instance-id
+          key: ec2.instance.id
+          delay: 24h
+          history: 90d
+          value_type: TEXT
+          inventory_link: TYPE_FULL
+        - uuid: 9b6924d105f948a2b8df646a2f1a4127
+          name: ec2-region
+          key: ec2.region
+          delay: 24h
+          value_type: TEXT
+          inventory_link: LOCATION_LON
+        - uuid: 3199e64548484fe2a1b5309cadf54c3d
+          name: tags-metadata
+          key: ec2.tags
+          delay: 24h
+          history: 90d
+          value_type: TEXT
+          inventory_link: NOTES
+      tags:
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: linux
+        - tag: tier
+          value: non-production

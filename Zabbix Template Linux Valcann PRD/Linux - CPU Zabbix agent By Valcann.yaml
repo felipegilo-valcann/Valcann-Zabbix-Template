@@ -1,0 +1,431 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 26ff66d075fa458191ad23b75aa88729
+      name: Linux
+    - uuid: 87aee4cb0e1343ccba619ab094961b8d
+      name: Production
+    - uuid: 05c84a0a453f4b44949ad9e9a614b173
+      name: Template/Valcann
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+    - uuid: fb0d0b63aabe4c4a83fb19a92cb34474
+      name: Valcann
+  templates:
+    - uuid: 47ac0666036a45d29ef94b4c604ab196
+      template: 'Linux - CPU Zabbix agent By Valcann'
+      name: 'Linux - CPU Zabbix agent By Valcann'
+      description: |
+        Template tooling version used: 0.38
+        
+        By Valcann
+      groups:
+        - name: Linux
+        - name: Production
+        - name: Template/Valcann
+        - name: Templates/Modules
+        - name: Valcann
+      items:
+        - uuid: 5f10e3ba701f472a938a77d57de11a10
+          name: 'Interrupts per second'
+          key: system.cpu.intr
+          history: 7d
+          value_type: FLOAT
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: a482955be2b8409186ef82a8344d9c5c
+          name: 'Load average (1m avg)'
+          key: 'system.cpu.load[all,avg1]'
+          history: 7d
+          value_type: FLOAT
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: df1db90e7f384c61b5f4f58b35337ea4
+          name: 'Load average (5m avg)'
+          key: 'system.cpu.load[all,avg5]'
+          history: 7d
+          value_type: FLOAT
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: 49c9d384603e428db313a6bb9996e15a
+          name: 'Load average (15m avg)'
+          key: 'system.cpu.load[all,avg15]'
+          history: 7d
+          value_type: FLOAT
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: c25c0eeb947940a99dfdd1acd8b0a0fd
+          name: 'Number of CPUs'
+          key: system.cpu.num
+          history: 7d
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: 955935fa004d4b1c8528fd149080c2bc
+          name: 'Context switches per second'
+          key: system.cpu.switches
+          history: 7d
+          value_type: FLOAT
+          preprocessing:
+            - type: CHANGE_PER_SECOND
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: c8826b540cac4916890a694bc18abd43
+          name: 'CPU utilization'
+          type: DEPENDENT
+          key: system.cpu.util
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'CPU utilization in %'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  //Calculate utilization
+                  return (100 - value)
+          master_item:
+            key: 'system.cpu.util[,idle]'
+          tags:
+            - tag: Application
+              value: CPU
+          triggers:
+            - uuid: 46d6ad51321d49db96dd9cb5609b9e13
+              expression: 'min(/Linux - CPU Zabbix agent By Valcann/system.cpu.util,15m)>={$CPU.UTIL.CRIT.P1}'
+              name: '[P1] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | CPU UTILIZATION (over {$CPU.UTIL.CRIT.P1}% for 15m)'
+              opdata: 'Current utilization: {ITEM.LASTVALUE1}'
+              status: DISABLED
+              priority: HIGH
+              description: 'CPU utilization is too high. The system might be slow to respond.'
+              tags:
+                - tag: Indicators
+                  value: Performance
+                - tag: Name
+                  value: '{HOST.NAME}'
+            - uuid: 2be591b7761f4bb5a9d5581681b4dead
+              expression: |
+                min(/Linux - CPU Zabbix agent By Valcann/system.cpu.util,15m)>={$CPU.UTIL.CRIT.P2}
+                and
+                min(/Linux - CPU Zabbix agent By Valcann/system.cpu.util,15m)<{$CPU.UTIL.CRIT.P1}
+              name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | CPU UTILIZATION (over {$CPU.UTIL.CRIT.P2}% for 15m)'
+              opdata: 'Current utilization: {ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'Per CPU load average is too high. Your system may be slow to respond.'
+              tags:
+                - tag: Indicators
+                  value: Performance
+                - tag: Name
+                  value: '{HOST.NAME}'
+            - uuid: ec6779cdd4254234ae5a00b4e488e7b8
+              expression: |
+                min(/Linux - CPU Zabbix agent By Valcann/system.cpu.util,15m)>={$CPU.UTIL.CRIT.P3}
+                and
+                min(/Linux - CPU Zabbix agent By Valcann/system.cpu.util,15m)<{$CPU.UTIL.CRIT.P2}
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | CPU UTILIZATION (over {$CPU.UTIL.CRIT.P3}% for 15m)'
+              opdata: 'Current utilization: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'CPU utilization is too high. The system might be slow to respond.'
+              tags:
+                - tag: Indicators
+                  value: Performance
+                - tag: Name
+                  value: '{HOST.NAME}'
+        - uuid: eeb9d5fee63246bc8ace577381a83d29
+          name: 'CPU guest time'
+          key: 'system.cpu.util[,guest]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'Guest  time (time  spent  running  a  virtual  CPU  for  a  guest  operating  system)'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: 008eb206cb4f41e4a59453f6448f5181
+          name: 'CPU guest nice time'
+          key: 'system.cpu.util[,guest_nice]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'Time spent running a niced guest (virtual CPU for guest operating systems under the control of the Linux kernel)'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: 4e9454bca4ac4b1e8191a2f175aa5ef9
+          name: 'CPU idle time'
+          key: 'system.cpu.util[,idle]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The time the CPU has spent doing nothing.'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: b51de7caf6cf4396ac04a464846d6627
+          name: 'CPU interrupt time'
+          key: 'system.cpu.util[,interrupt]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The amount of time the CPU has been servicing hardware interrupts.'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: b06f1a7b7c0449139cbf1622e2e4d607
+          name: 'CPU iowait time'
+          key: 'system.cpu.util[,iowait]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'Amount of time the CPU has been waiting for I/O to complete.'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: c6eb4f5875b04467a7ebd9de67c4cf24
+          name: 'CPU nice time'
+          key: 'system.cpu.util[,nice]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The time the CPU has spent running users'' processes that have been niced.'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: 4c3e034c7cf241289291f687252af8ee
+          name: 'CPU softirq time'
+          key: 'system.cpu.util[,softirq]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The amount of time the CPU has been servicing software interrupts.'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: d76c17e722fd4b2da632f50332fd75d1
+          name: 'CPU steal time'
+          key: 'system.cpu.util[,steal]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The amount of CPU ''stolen'' from this virtual machine by the hypervisor for other tasks (such as running another virtual machine).'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: fc5062aef5e74891b8b7c9b87ab4f664
+          name: 'CPU system time'
+          key: 'system.cpu.util[,system]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The time the CPU has spent running the kernel and its processes.'
+          tags:
+            - tag: Application
+              value: CPU
+        - uuid: 55dbfd35149b423a9829116e1655d616
+          name: 'CPU user time'
+          key: 'system.cpu.util[,user]'
+          history: 7d
+          value_type: FLOAT
+          units: '%'
+          description: 'The time the CPU has spent running users'' processes that are not niced.'
+          tags:
+            - tag: Application
+              value: CPU
+      tags:
+        - tag: component
+          value: cpu
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: linux
+        - tag: tier
+          value: production
+      macros:
+        - macro: '{$CPU.UTIL.CRIT}'
+          value: '90'
+        - macro: '{$CPU.UTIL.CRIT.P1}'
+          value: '99'
+        - macro: '{$CPU.UTIL.CRIT.P2}'
+          value: '95'
+        - macro: '{$CPU.UTIL.CRIT.P3}'
+          value: '90'
+        - macro: '{$LOAD_AVG_PER_CPU.MAX.WARN}'
+          value: '1.5'
+          description: 'Load per CPU considered sustainable. Tune if needed.'
+      dashboards:
+        - uuid: 1d6154f432614f3dabf1cbf74e6f938d
+          name: CPU
+          pages:
+            - name: Overview
+              widgets:
+                - type: graph
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - CPU Zabbix agent By Valcann'
+                        name: 'CPU jumps'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                - type: graph
+                  'y': '5'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - CPU Zabbix agent By Valcann'
+                        name: 'CPU usage'
+                    - type: STRING
+                      name: reference
+                      value: AAAAB
+                - type: graph
+                  'y': '10'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - CPU Zabbix agent By Valcann'
+                        name: 'CPU utilization'
+                    - type: STRING
+                      name: reference
+                      value: AAAAC
+                - type: graph
+                  'y': '15'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        host: 'Linux - CPU Zabbix agent By Valcann'
+                        name: 'System load'
+                    - type: STRING
+                      name: reference
+                      value: AAAAD
+  triggers:
+    - uuid: 69b315abf2254ae6ba49bc4373d54bb4
+      expression: |
+        min(/Linux - CPU Zabbix agent By Valcann/system.cpu.load[all,avg1],5m)/last(/Linux - CPU Zabbix agent By Valcann/system.cpu.num)>{$LOAD_AVG_PER_CPU.MAX.WARN}
+        and last(/Linux - CPU Zabbix agent By Valcann/system.cpu.load[all,avg5])>0
+        and last(/Linux - CPU Zabbix agent By Valcann/system.cpu.load[all,avg15])>0
+      name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Load average is too high (per CPU load over {$LOAD_AVG_PER_CPU.MAX.WARN} for 5m)'
+      opdata: 'Load averages(1m 5m 15m): ({ITEM.LASTVALUE1} {ITEM.LASTVALUE3} {ITEM.LASTVALUE4}), # of CPUs: {ITEM.LASTVALUE2}'
+      status: DISABLED
+      priority: WARNING
+      description: 'Per CPU load average is too high. Your system may be slow to respond.'
+  graphs:
+    - uuid: e0917394871d4870b40c599b14d107b9
+      name: 'CPU jumps'
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: system.cpu.switches
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: system.cpu.intr
+    - uuid: e9815028a7ac414caba1133f98cdf431
+      name: 'CPU usage'
+      type: STACKED
+      ymin_type_1: FIXED
+      ymax_type_1: FIXED
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,system]'
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,user]'
+        - sortorder: '2'
+          color: F63100
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,nice]'
+        - sortorder: '3'
+          color: A54F10
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,iowait]'
+        - sortorder: '4'
+          color: FC6EA3
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,steal]'
+        - sortorder: '5'
+          color: 6C59DC
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,interrupt]'
+        - sortorder: '6'
+          color: AC8C14
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,softirq]'
+        - sortorder: '7'
+          color: 611F27
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,guest]'
+        - sortorder: '8'
+          color: F230E0
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.util[,guest_nice]'
+    - uuid: 23c35f375b6a4588b57e9cd772d8e752
+      name: 'CPU utilization'
+      ymin_type_1: FIXED
+      ymax_type_1: FIXED
+      graph_items:
+        - drawtype: GRADIENT_LINE
+          color: 1A7C11
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: system.cpu.util
+    - uuid: 5a15c03c97444d97bcc443f53e4e6868
+      name: 'System load'
+      ymin_type_1: FIXED
+      graph_items:
+        - color: 1A7C11
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.load[all,avg1]'
+        - sortorder: '1'
+          color: 2774A4
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.load[all,avg5]'
+        - sortorder: '2'
+          color: F63100
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: 'system.cpu.load[all,avg15]'
+        - sortorder: '3'
+          color: A54F10
+          yaxisside: RIGHT
+          item:
+            host: 'Linux - CPU Zabbix agent By Valcann'
+            key: system.cpu.num

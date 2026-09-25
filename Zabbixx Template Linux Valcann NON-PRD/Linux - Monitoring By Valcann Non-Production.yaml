@@ -1,0 +1,44 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 26ff66d075fa458191ad23b75aa88729
+      name: Linux
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 05c84a0a453f4b44949ad9e9a614b173
+      name: Template/Valcann
+    - uuid: fb0d0b63aabe4c4a83fb19a92cb34474
+      name: Valcann
+  templates:
+    - uuid: e28c645f68904f1fa5cfc769e539461b
+      template: 'Linux - Monitoring By Valcann Non-Production'
+      name: 'Linux - Monitoring By Valcann Non-Production'
+      templates:
+        - name: 'Linux - Antivirus By Valcann Non-Production'
+        - name: 'Linux - Block devices Zabbix agent By Valcann Non-Production'
+        - name: 'Linux - CPU Zabbix agent By Valcann Non-Production'
+        - name: 'Linux - Filesystems Zabbix agent By Valcann Non-Production'
+        - name: 'Linux - Generic Zabbix agent By Valcann Non-Production'
+        - name: 'Linux - Memory Zabbix agent By Valcann Non-Production'
+        - name: 'Linux - Metadata by Valcann Non-Production'
+        - name: 'Linux - Network interfaces Zabbix agent By Valcann Non-Production'
+        - name: 'Linux - Zabbix agent By Valcann Non-Production'
+      groups:
+        - name: Linux
+        - name: Non-Production
+        - name: Template/Valcann
+        - name: Valcann
+      tags:
+        - tag: component
+          value: agent
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: linux
+        - tag: tier
+          value: non-production
+      macros:
+        - macro: '{$AMBIENTE}'
+          value: DEV

@@ -1,0 +1,276 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: 26ff66d075fa458191ad23b75aa88729
+      name: Linux
+    - uuid: 87aee4cb0e1343ccba619ab094961b8d
+      name: Production
+    - uuid: 05c84a0a453f4b44949ad9e9a614b173
+      name: Template/Valcann
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+    - uuid: fb0d0b63aabe4c4a83fb19a92cb34474
+      name: Valcann
+  templates:
+    - uuid: ee854e3e80f04a21844a3e786e7bb2df
+      template: 'Linux - Filesystems Zabbix agent By Valcann'
+      name: 'Linux - Filesystems Zabbix agent By Valcann'
+      description: |
+        Template tooling version used: 0.38
+        
+        By Valcann
+      groups:
+        - name: Linux
+        - name: Production
+        - name: Template/Valcann
+        - name: Templates/Modules
+        - name: Valcann
+      discovery_rules:
+        - uuid: c7bd8900463048e98e269481ba5cb4ee
+          name: 'Mounted filesystem discovery'
+          key: vfs.fs.discovery
+          delay: 1h
+          filter:
+            evaltype: AND
+            conditions:
+              - macro: '{#FSNAME}'
+                value: '{$VFS.FS.FSNAME.MATCHES}'
+              - macro: '{#FSNAME}'
+                value: '{$VFS.FS.FSNAME.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+              - macro: '{#FSTYPE}'
+                value: '{$VFS.FS.FSTYPE.MATCHES}'
+              - macro: '{#FSTYPE}'
+                value: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
+                operator: NOT_MATCHES_REGEX
+          lifetime: 30d
+          enabled_lifetime_type: DISABLE_NEVER
+          description: 'Discovery of file systems of different types.'
+          item_prototypes:
+            - uuid: 77415afa1e8749f38557f943cfa776c3
+              name: '{#FSNAME}: Free inodes in %'
+              key: 'vfs.fs.inode[{#FSNAME},pfree]'
+              history: 7d
+              value_type: FLOAT
+              units: '%'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+              trigger_prototypes:
+                - uuid: a88415512e874bfe8203289dded573a7
+                  expression: 'min(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.inode[{#FSNAME},pfree],5m)<{$VFS.FS.INODE.PFREE.MIN.CRIT:"{#FSNAME}"}'
+                  name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | {#FSNAME} Running out of free inodes (free < {$VFS.FS.INODE.PFREE.MIN.CRIT:"{#FSNAME}"}%)'
+                  opdata: 'Free inodes: {ITEM.LASTVALUE1}'
+                  priority: AVERAGE
+                  description: |
+                    It may become impossible to write to disk if there are no index nodes left.
+                    As symptoms, 'No space left on device' or 'Disk is full' errors may be seen even though free space is available.
+                - uuid: 2a003b34ca8f49a1a5ac35d9692b065a
+                  expression: 'min(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.inode[{#FSNAME},pfree],5m)<{$VFS.FS.INODE.PFREE.MIN.WARN:"{#FSNAME}"}'
+                  name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | {#FSNAME} Running out of free inodes (free < {$VFS.FS.INODE.PFREE.MIN.WARN:"{#FSNAME}"}%)'
+                  opdata: 'Free inodes: {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: |
+                    It may become impossible to write to disk if there are no index nodes left.
+                    As symptoms, 'No space left on device' or 'Disk is full' errors may be seen even though free space is available.
+                  dependencies:
+                    - name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | {#FSNAME} Running out of free inodes (free < {$VFS.FS.INODE.PFREE.MIN.CRIT:"{#FSNAME}"}%)'
+                      expression: 'min(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.inode[{#FSNAME},pfree],5m)<{$VFS.FS.INODE.PFREE.MIN.CRIT:"{#FSNAME}"}'
+            - uuid: 7f5d4d7eb66d4a1687aed0e823f5ce0c
+              name: '{#FSNAME}: Space utilization'
+              key: 'vfs.fs.size[{#FSNAME},pused]'
+              history: 7d
+              value_type: FLOAT
+              units: '%'
+              description: 'Space utilization in % for {#FSNAME}'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+              trigger_prototypes:
+                - uuid: e27a89d1f04247b8b0c77c3db54f1a98
+                  expression: 'last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])>={$FS.PUSED.CRIT.P1}'
+                  name: '[P1] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISK {#FSNAME} USED 99%)'
+                  opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+                  priority: HIGH
+                  description: 'Disk space usage on {#FSNAME} has reached 99% or above. Only 1% of free space remaining.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: customer
+                      value: '{$CLIENT}'
+                    - tag: Indicators
+                      value: Operational
+                - uuid: 9767f55cc12242558e3749f752d43dfa
+                  expression: 'last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])>={$FS.PUSED.CRIT.P2} and last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])<{$FS.PUSED.CRIT.P1}'
+                  name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISK {#FSNAME} USED 95%)'
+                  opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+                  priority: AVERAGE
+                  description: 'Disk space usage on {#FSNAME} has reached 95% or above. Only 5% of free space remaining.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: customer
+                      value: '{$CLIENT}'
+                    - tag: Indicators
+                      value: Operational
+                - uuid: 6d86d7838ecd4db98b248f41d6628669
+                  expression: |
+                    last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])>={$FS.PUSED.CRIT.P3}
+                    and last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])<{$FS.PUSED.CRIT.P2}
+                  name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | DISK {#FSNAME} USED 90%)'
+                  opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+                  priority: WARNING
+                  description: 'Disk space usage on {#FSNAME} has reached 90% or above. Only 10% of free space remaining.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: customer
+                      value: '{$CLIENT}'
+                    - tag: Indicators
+                      value: Operational
+            - uuid: 8aebd4910af54c7180242e52e5232814
+              name: '{#FSNAME}: Total space'
+              key: 'vfs.fs.size[{#FSNAME},total]'
+              history: 7d
+              units: B
+              description: 'Total space in Bytes'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+            - uuid: de56454806784a11918042bc6a5ef8bf
+              name: '{#FSNAME}: Used space'
+              key: 'vfs.fs.size[{#FSNAME},used]'
+              history: 7d
+              units: B
+              description: 'Used storage in Bytes'
+              tags:
+                - tag: Application
+                  value: 'Filesystem {#FSNAME}'
+          trigger_prototypes:
+            - uuid: fcb509932eac4ae198974abe48ffad15
+              expression: |
+                last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])>{$VFS.FS.PUSED.MAX.CRIT:"{#FSNAME}"} and
+                ((last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},total])-last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},used]))<5G or timeleft(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused],1h,100)<1d)
+              name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | {#FSNAME} DISK SPACE IS CRITICALLY LOW (used > {$VFS.FS.PUSED.MAX.CRIT:"{#FSNAME}"}%)'
+              opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+              status: DISABLED
+              discover: NO_DISCOVER
+              priority: AVERAGE
+              description: |
+                Two conditions should match: First, space utilization should be above {$VFS.FS.PUSED.MAX.CRIT:"{#FSNAME}"}.
+                 Second condition should be one of the following:
+                 - The disk free space is less than 5G.
+                 - The disk will be full in less than 24 hours.
+              manual_close: 'YES'
+              tags:
+                - tag: customer
+                  value: '{$CLIENT}'
+                - tag: Indicators
+                  value: Operational
+            - uuid: cc02d3cd18cc4899887bc374fee63554
+              expression: |
+                last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])>{$VFS.FS.PUSED.MAX.WARN:"{#FSNAME}"} and
+                ((last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},total])-last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},used]))<10G or timeleft(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused],1h,100)<1d)
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | {#FSNAME} DISK SPACE IS LOW (used > {$VFS.FS.PUSED.MAX.WARN:"{#FSNAME}"}%)'
+              opdata: 'Space used: {ITEM.LASTVALUE3} of {ITEM.LASTVALUE2} ({ITEM.LASTVALUE1})'
+              status: DISABLED
+              discover: NO_DISCOVER
+              priority: WARNING
+              description: |
+                Two conditions should match: First, space utilization should be above {$VFS.FS.PUSED.MAX.WARN:"{#FSNAME}"}.
+                 Second condition should be one of the following:
+                 - The disk free space is less than 10G.
+                 - The disk will be full in less than 24 hours.
+              manual_close: 'YES'
+              dependencies:
+                - name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | {#FSNAME} DISK SPACE IS CRITICALLY LOW (used > {$VFS.FS.PUSED.MAX.CRIT:"{#FSNAME}"}%)'
+                  expression: |
+                    last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused])>{$VFS.FS.PUSED.MAX.CRIT:"{#FSNAME}"} and
+                    ((last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},total])-last(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},used]))<5G or timeleft(/Linux - Filesystems Zabbix agent By Valcann/vfs.fs.size[{#FSNAME},pused],1h,100)<1d)
+              tags:
+                - tag: customer
+                  value: '{$CLIENT}'
+                - tag: Indicators
+                  value: Operational
+          graph_prototypes:
+            - uuid: 5d16315ea382488ebfc744d52ff4e74c
+              name: '{#FSNAME}: Disk space usage'
+              width: '600'
+              height: '340'
+              type: PIE
+              show_3d: 'YES'
+              graph_items:
+                - color: '969696'
+                  calc_fnc: LAST
+                  type: GRAPH_SUM
+                  item:
+                    host: 'Linux - Filesystems Zabbix agent By Valcann'
+                    key: 'vfs.fs.size[{#FSNAME},total]'
+                - sortorder: '1'
+                  color: C80000
+                  calc_fnc: LAST
+                  item:
+                    host: 'Linux - Filesystems Zabbix agent By Valcann'
+                    key: 'vfs.fs.size[{#FSNAME},used]'
+      tags:
+        - tag: component
+          value: filesystem
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: linux
+        - tag: tier
+          value: production
+      macros:
+        - macro: '{$FS.PUSED.CRIT.P1}'
+          value: '99'
+          description: 'Disco ≥ 99%'
+        - macro: '{$FS.PUSED.CRIT.P2}'
+          value: '95'
+          description: 'Disco ≥ 95%'
+        - macro: '{$FS.PUSED.CRIT.P3}'
+          value: '90'
+          description: 'Disco ≥ 90%'
+        - macro: '{$VFS.FS.FSNAME.MATCHES}'
+          value: .+
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level'
+        - macro: '{$VFS.FS.FSNAME.NOT_MATCHES}'
+          value: ^(/dev|/sys|/run|/proc|.+/shm$)
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level'
+        - macro: '{$VFS.FS.FSTYPE.MATCHES}'
+          value: ^(btrfs|ext2|ext3|ext4|reiser|xfs|ffs|ufs|jfs|jfs2|vxfs|hfs|apfs|refs|ntfs|fat32|zfs)$
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level'
+        - macro: '{$VFS.FS.FSTYPE.NOT_MATCHES}'
+          value: ^\s$
+          description: 'This macro is used in filesystems discovery. Can be overridden on the host or linked template level'
+        - macro: '{$VFS.FS.INODE.PFREE.MIN.CRIT}'
+          value: '15'
+        - macro: '{$VFS.FS.INODE.PFREE.MIN.WARN}'
+          value: '20'
+        - macro: '{$VFS.FS.PUSED.MAX.CRIT}'
+          value: '90'
+        - macro: '{$VFS.FS.PUSED.MAX.WARN}'
+          value: '80'
+      dashboards:
+        - uuid: 26406bb0cb8049c292b455a2ba0e5072
+          name: Filesystems
+          pages:
+            - name: Overview
+              widgets:
+                - type: graphprototype
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: columns
+                      value: '1'
+                    - type: GRAPH_PROTOTYPE
+                      name: graphid
+                      value:
+                        host: 'Linux - Filesystems Zabbix agent By Valcann'
+                        name: '{#FSNAME}: Disk space usage'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                    - type: INTEGER
+                      name: rows
+                      value: '1'

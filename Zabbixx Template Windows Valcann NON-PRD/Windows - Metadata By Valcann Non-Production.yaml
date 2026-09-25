@@ -1,0 +1,51 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+  templates:
+    - uuid: dbb2189d574041c9b6b9d0b5bfb38896
+      template: 'Windows - Metadata By Valcann Non-Production'
+      name: 'Windows - Metadata By Valcann Non-Production'
+      groups:
+        - name: Non-Production
+        - name: Template/Valcann
+      items:
+        - uuid: 9f7e5630c9b6483d9701f19e3017f7bb
+          name: account-id
+          key: ec2.account.id
+          delay: 24h
+          history: 90d
+          value_type: TEXT
+          inventory_link: LOCATION
+        - uuid: 99daa691ed3d4930838526f2977cf498
+          name: ec2-instance-id
+          key: ec2.instance.id
+          delay: 24h
+          history: 90d
+          value_type: TEXT
+          inventory_link: TYPE_FULL
+        - uuid: d59390b2b3984bce963f28c0e163a01d
+          name: ec2-region
+          key: ec2.region
+          delay: 24h
+          value_type: TEXT
+          inventory_link: LOCATION_LON
+        - uuid: f44b88d3d2ed4e86a509aea73c049014
+          name: tags-metadata
+          key: ec2.tags
+          delay: 24h
+          history: 90d
+          value_type: TEXT
+          inventory_link: NOTES
+      tags:
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: non-production

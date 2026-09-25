@@ -1,0 +1,184 @@
+zabbix_export:
+  version: '7.4'
+  template_groups:
+    - uuid: bc208e27a97e44f7bfdede69b54ece77
+      name: Non-Production
+    - uuid: 139f5516036449dfb4937993b38c8e6e
+      name: Template/Valcann
+    - uuid: 57b7ae836ca64446ba2c296389c009b7
+      name: Templates/Modules
+    - uuid: 5eaaad360f814208b4123886b87455e2
+      name: Valcann
+    - uuid: e6038d56379f469a8610699f874881f7
+      name: Windows
+  templates:
+    - uuid: f7875c1cda9e40d89726d78de100232e
+      template: 'Windows - Generic Zabbix agent By Valcann Non-Production'
+      name: 'Windows - Generic Zabbix agent By Valcann Non-Production'
+      description: |
+        Template tooling version used: 0.38
+        By Valcann
+      groups:
+        - name: Non-Production
+        - name: Template/Valcann
+        - name: Templates/Modules
+        - name: Valcann
+        - name: Windows
+      items:
+        - uuid: 6a727fe19a964a2b8b18313673baa108
+          name: 'Number of threads'
+          key: 'perf_counter_en["\System\Threads"]'
+          history: 7d
+          description: 'The number of threads used by all running processes.'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: f71c6b4a90664724a29f647a70b74ade
+          name: 'Number of processes'
+          key: 'proc.num[]'
+          history: 7d
+          description: 'The number of processes.'
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 1504fff6be5c49b39c4fe1d46703e339
+          name: 'System name'
+          key: system.hostname
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          description: 'System host name.'
+          inventory_link: NAME
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 7af271bc8cc5422d94b9162245308a00
+              expression: '(last(/Windows - Generic Zabbix agent By Valcann Non-Production/system.hostname,#1)<>last(/Windows - Generic Zabbix agent By Valcann Non-Production/system.hostname,#2))=1 and length(last(/Windows - Generic Zabbix agent By Valcann Non-Production/system.hostname))>0'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | SYSTEM NAME HAS CHANGED (new name: {ITEM.VALUE})'
+              priority: INFO
+              description: 'System name has changed. Ack to close.'
+              manual_close: 'YES'
+        - uuid: b296d4a3dbfd475b9a304898db9a30e8
+          name: 'System local time'
+          key: system.localtime
+          history: 7d
+          units: unixtime
+          description: 'System local time of the host.'
+          tags:
+            - tag: Application
+              value: General
+          triggers:
+            - uuid: 7e8bf27b3af8443586cfa68024091a46
+              expression: 'fuzzytime(/Windows - Generic Zabbix agent By Valcann Non-Production/system.localtime,{$SYSTEM.FUZZYTIME.MAX})=0'
+              name: '[P3] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | SYSTEM TIME IS OUT OF SYNC (diff with Zabbix server > {$SYSTEM.FUZZYTIME.MAX}s)'
+              priority: WARNING
+              description: 'The host system time is different from the Zabbix server time.'
+              manual_close: 'YES'
+        - uuid: cfc07e960c08459fac5d5c485200d8c4
+          name: 'Operating system architecture'
+          key: system.sw.arch
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          description: 'Operating system architecture of the host.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: Inventory
+        - uuid: 83362ac390414233af1196485e8a8274
+          name: 'System description'
+          key: system.uname
+          delay: 1h
+          history: 2w
+          value_type: CHAR
+          description: 'System description of the host.'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: Application
+              value: General
+        - uuid: 9911f484c4894a699766c558031b07cd
+          name: 'System uptime'
+          key: system.uptime
+          delay: 30s
+          history: 2w
+          trends: '0'
+          units: uptime
+          description: 'System uptime in ''N days, hh:mm:ss'' format.'
+          tags:
+            - tag: Application
+              value: Status
+          triggers:
+            - uuid: 4e8562815a8a4eb4aa9275fbd4682b01
+              expression: 'last(/Windows - Generic Zabbix agent By Valcann Non-Production/system.uptime)<10m'
+              name: '[P2] {$CLIENT} | EC2 | {HOST.NAME} | {$AMBIENTE} | Host " {HOST.NAME} "has been restarted (uptime < 10m)'
+              priority: AVERAGE
+              description: 'The device uptime is less than 10 minutes.'
+              manual_close: 'YES'
+              tags:
+                - tag: Indicators
+                  value: Operational
+                - tag: Name
+                  value: '{HOST.NAME}'
+      tags:
+        - tag: component
+          value: generic
+        - tag: custom
+          value: valcann
+        - tag: customer
+          value: '{$CLIENT}'
+        - tag: os
+          value: windows
+        - tag: tier
+          value: non-production
+      macros:
+        - macro: '{$SYSTEM.FUZZYTIME.MAX}'
+          value: '60'
+          description: 'The threshold for difference of system time in seconds.'
+      dashboards:
+        - uuid: 2532a24d02ad4e0eb90632dc8a5710ad
+          name: Processes
+          pages:
+            - name: Overview
+              widgets:
+                - type: graph
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        host: 'Windows - Generic Zabbix agent By Valcann Non-Production'
+                        key: 'proc.num[]'
+                    - type: STRING
+                      name: reference
+                      value: AAAAA
+                    - type: INTEGER
+                      name: source_type
+                      value: '1'
+                - type: graph
+                  'y': '5'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: ITEM
+                      name: itemid
+                      value:
+                        host: 'Windows - Generic Zabbix agent By Valcann Non-Production'
+                        key: 'perf_counter_en["\System\Threads"]'
+                    - type: STRING
+                      name: reference
+                      value: AAAAB
+                    - type: INTEGER
+                      name: source_type
+                      value: '1'

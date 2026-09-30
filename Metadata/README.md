@@ -53,6 +53,7 @@ Restart-Service "Zabbix Agent 2"
 & "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.instance.id
 & "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.region
 & "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.account.id
+& "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.tags
 ```
 
 ---
@@ -103,6 +104,7 @@ sudo systemctl status zabbix-agent2
 zabbix_agent2 -t ec2.instance.id
 zabbix_agent2 -t ec2.region
 zabbix_agent2 -t ec2.account.id
+zabbix_agent2 -t ec2.tags
 ```
 
 ---

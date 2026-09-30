@@ -53,7 +53,6 @@ Restart-Service "Zabbix Agent 2"
 & "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.instance.id
 & "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.region
 & "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.account.id
-& "C:\Program Files\Zabbix Agent 2\zabbix_agent2.exe" -t ec2.hostname
 ```
 
 ---
@@ -104,7 +103,6 @@ sudo systemctl status zabbix-agent2
 zabbix_agent2 -t ec2.instance.id
 zabbix_agent2 -t ec2.region
 zabbix_agent2 -t ec2.account.id
-zabbix_agent2 -t ec2.hostname
 ```
 
 ---
@@ -117,7 +115,6 @@ Os arquivos disponibilizam as seguintes keys no Zabbix:
 ec2.instance.id
 ec2.region
 ec2.account.id
-ec2.hostname
 ```
 
 ## Pré-requisitos
